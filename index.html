@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather by Pincode</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 300px;
+    }
+    input {
+      padding: 10px;
+      width: 80%;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .result {
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Weather Finder</h2>
+    <input type="text" id="pincode" placeholder="Enter Pincode">
+    <br>
+    <button onclick="getWeather()">Get Weather</button>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    async function getWeather() {
+      const pincode = document.getElementById('pincode').value;
+      const apiKey = 'YOUR_API_KEY'; // Replace with your OpenWeatherMap API key
+
+      if (!pincode) {
+        alert('Please enter a pincode');
+        return;
+      }
+
+      try {
+        // First get location (lat, lon) from pincode
+        const geoRes = await fetch(`https://api.openweathermap.org/geo/1.0/zip?zip=${pincode},IN&appid=${apiKey}`);
+        const geoData = await geoRes.json();
+
+        if (!geoData.lat) {
+          document.getElementById('result').innerHTML = 'Invalid pincode';
+          return;
+        }
+
+        // Then get weather using lat/lon
+        const weatherRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${geoData.lat}&lon=${geoData.lon}&units=metric&appid=${apiKey}`);
+        const weatherData = await weatherRes.json();
+
+        document.getElementById('result').innerHTML = `
+          <h3>${geoData.name}</h3>
+          <p>Temperature: ${weatherData.main.temp} °C</p>
+          <p>Weather: ${weatherData.weather[0].description}</p>
+          <p>Humidity: ${weatherData.main.humidity}%</p>
+        `;
+      } catch (error) {
+        document.getElementById('result').innerHTML = 'Error fetching data';
+      }
+    }
+  </script>
+</body>
+</html>
