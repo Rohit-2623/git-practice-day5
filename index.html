@@ -89,7 +89,7 @@
           <p>🌤️ Weather: ${data.weather[0].description}</p>
           <p>💧 Humidity: ${data.main.humidity}%</p>
           <p>🌬️ Wind Speed: ${data.wind.speed} m/s</p>
-        `;
+        `
       } catch (error) {
         document.getElementById('result').innerHTML = 'Error fetching data';
       }
