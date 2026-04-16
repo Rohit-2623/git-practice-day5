@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Weather by Pincode</title>
+  <title>Weather Finder</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -20,11 +20,11 @@
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       text-align: center;
-      width: 300px;
+      width: 320px;
     }
     input {
       padding: 10px;
-      width: 80%;
+      width: 85%;
       margin-bottom: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
@@ -48,53 +48,51 @@
 <body>
   <div class="container">
     <h2>Weather Finder</h2>
-    <input type="text" id="pincode" placeholder="Enter Pincode or City">
+    <input type="text" id="input" placeholder="Enter Pincode or City">
     <br>
     <button onclick="getWeather()">Get Weather</button>
     <div class="result" id="result"></div>
   </div>
 
   <script>
-  async function getWeather() {
-    const input = document.getElementById('pincode').value.trim();
-    const apiKey = '43d784fcbd40f982b01b66f8f383cee3'; // put your real key here
+    async function getWeather() {
+      const input = document.getElementById('input').value.trim();
+      const apiKey = '43d784fcbd40f982b01b66f8f383cee3'; // 🔑 Replace with your API key
 
-    if (!input) {
-      alert('Please enter pincode or city name');
-      return;
-    }
-
-    let url = '';
-
-    // Check if input is number (pincode)
-    if (/^\d+$/.test(input)) {
-      url = `https://api.openweathermap.org/data/2.5/weather?zip=${input},IN&units=metric&appid=${apiKey}`;
-    } else {
-      // Otherwise treat as city name
-      url = `https://api.openweathermap.org/data/2.5/weather?q=${input}&units=metric&appid=${apiKey}`;
-    }
-
-    try {
-      const res = await fetch(url);
-      const data = await res.json();
-
-      if (data.cod != 200) {
-        document.getElementById('result').innerHTML = data.message;
+      if (!input) {
+        alert('Please enter pincode or city name');
         return;
       }
 
-      document.getElementById('result').innerHTML = `
-        <h3>${data.name}, ${data.sys.country}</h3>
-        <p>🌡️ Temperature: ${data.main.temp} °C</p>
-        <p>🌤️ Weather: ${data.weather[0].description}</p>
-        <p>💧 Humidity: ${data.main.humidity}%</p>
-        <p>🌬️ Wind: ${data.wind.speed} m/s</p>
-      `;
-    } catch (error) {
-      document.getElementById('result').innerHTML = 'Error fetching data';
-    }
-  }
-</script>
+      let url = '';
+
+      // If input is only numbers → treat as pincode
+      if (/^\\d+$/.test(input)) {
+        url = `https://api.openweathermap.org/data/2.5/weather?zip=${input},IN&units=metric&appid=${apiKey}`;
+      } else {
+        // Otherwise treat as city name
+        url = `https://api.openweathermap.org/data/2.5/weather?q=${input}&units=metric&appid=${apiKey}`;
+      }
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.cod != 200) {
+          document.getElementById('result').innerHTML = `<p>${data.message}</p>`;
+          return;
+        }
+
+        document.getElementById('result').innerHTML = `
+          <h3>${data.name}, ${data.sys.country}</h3>
+          <p>🌡️ Temperature: ${data.main.temp} °C</p>
+          <p>🌤️ Weather: ${data.weather[0].description}</p>
+          <p>💧 Humidity: ${data.main.humidity}%</p>
+          <p>🌬️ Wind Speed: ${data.wind.speed} m/s</p>
+        `;
+      } catch (error) {
+        document.getElementById('result').innerHTML = 'Error fetching data';
+      }
     }
   </script>
 </body>
