@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Weather Finder</title>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -11,53 +12,82 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
+      transition: background 0.5s;
     }
+
     .container {
       background: white;
       padding: 20px;
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      text-align: center;
-      width: 320px;
+      width: 350px;
     }
+
+    h2 {
+      text-align: center;
+    }
+
     input {
       padding: 10px;
-      width: 85%;
+      width: 90%;
       margin-bottom: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
     }
+
     button {
-      padding: 10px 20px;
+      padding: 10px;
+      width: 100%;
       border: none;
       background: #007bff;
       color: white;
       border-radius: 8px;
       cursor: pointer;
     }
+
     button:hover {
       background: #0056b3;
     }
+
     .result {
       margin-top: 15px;
     }
+
+    .alert {
+      color: red;
+      font-weight: bold;
+    }
+
+    .card {
+      background: #fafafa;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+    }
   </style>
 </head>
+
 <body>
   <div class="container">
     <h2>Weather Finder</h2>
+
     <input type="text" id="input" placeholder="Enter Pincode or City">
-    <br>
     <button onclick="getWeather()">Get Weather</button>
+
     <div class="result" id="result"></div>
   </div>
 
   <script>
+    function getWindDirection(deg) {
+      const directions = ["N","NE","E","SE","S","SW","W","NW"];
+      return directions[Math.round(deg / 45) % 8];
+    }
+
     async function getWeather() {
       const input = document.getElementById('input').value.trim();
-      const apiKey = '43d784fcbd40f982b01b66f8f383cee3'; // 🔑 Replace with your API key
+      const apiKey = '43d784fcbd40f982b01b66f8f383cee3';
 
       if (!input) {
         alert('Please enter pincode or city name');
@@ -66,11 +96,9 @@
 
       let url = '';
 
-      // If input is only numbers → treat as pincode
       if (/^\\d+$/.test(input)) {
         url = `https://api.openweathermap.org/data/2.5/weather?zip=${input},IN&units=metric&appid=${apiKey}`;
       } else {
-        // Otherwise treat as city name
         url = `https://api.openweathermap.org/data/2.5/weather?q=${input}&units=metric&appid=${apiKey}`;
       }
 
@@ -79,17 +107,48 @@
         const data = await res.json();
 
         if (data.cod != 200) {
-          document.getElementById('result').innerHTML = `<p>${data.message}</p>`;
+          document.getElementById('result').innerHTML = data.message;
           return;
         }
 
+        // Rain detection
+        let isRaining = data.weather[0].main.toLowerCase().includes("rain");
+
+        let rainInfo = "No rain";
+        if (data.rain && data.rain["1h"]) {
+          rainInfo = data.rain["1h"] + " mm (last 1h)";
+          isRaining = true;
+        }
+
+        // Change background
+        document.body.style.background = isRaining ? "#d0e7ff" : "#f0f4f8";
+
+        let alertMsg = isRaining ? "<p class='alert'>🚨 Rain Alert!</p>" : "";
+
         document.getElementById('result').innerHTML = `
           <h3>${data.name}, ${data.sys.country}</h3>
-          <p>🌡️ Temperature: ${data.main.temp} °C</p>
-          <p>🌤️ Weather: ${data.weather[0].description}</p>
-          <p>💧 Humidity: ${data.main.humidity}%</p>
-          <p>🌬️ Wind Speed: ${data.wind.speed} m/s</p>
-        `
+          ${alertMsg}
+
+          <div class="card">
+            <p>🌡️ Temp: ${data.main.temp} °C</p>
+            <p>🤒 Feels Like: ${data.main.feels_like} °C</p>
+            <p>🔼 Max: ${data.main.temp_max} °C</p>
+            <p>🔽 Min: ${data.main.temp_min} °C</p>
+          </div>
+
+          <div class="card">
+            <p>🌤️ Condition: ${data.weather[0].description}</p>
+            <p>💧 Humidity: ${data.main.humidity}%</p>
+            <p>ضغط Pressure: ${data.main.pressure} hPa</p>
+          </div>
+
+          <div class="card">
+            <p>🌬️ Wind Speed: ${data.wind.speed} m/s</p>
+            <p>🧭 Direction: ${getWindDirection(data.wind.deg)}</p>
+            <p>🌧️ Rain: ${rainInfo}</p>
+          </div>
+        `;
+
       } catch (error) {
         document.getElementById('result').innerHTML = 'Error fetching data';
       }
